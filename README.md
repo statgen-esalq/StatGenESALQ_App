@@ -1,4 +1,4 @@
-This tools are in constant development by members of ESALQ/USP Statistical Genetics Laboratory. Feel free to contribute sending pull requests or contacting one of us.
+These tools are in constant development by members of ESALQ/USP Statistical Genetics Laboratory. Feel free to contribute sending pull requests or contacting one of us.
 
 This shiny app performs statistical genetics analysis for diverse purposes. Please, check the left menu items for each feature detailed description.
 
@@ -31,7 +31,7 @@ Because this shiny App is made using [Golem](https://golemverse.org/), it works 
 * (Public access) Install [Docker](https://www.docker.com/get-started) and access the app via container:
 
 ```{bash, eval=FALSE}
-docker run cristaniguti/statgenapp
+docker run --rm -e USERID=$(id -u) -e GROUPID=$(id -g) -p 80:80 -e DISABLE_AUTH=true cristaniguti/statgenapp
 ```
 
 The App will be available in the port `localhost:80` or `127.0.0.1:80`. Using container you will not require any installation but Docker (you don't even need to have R installed). It works in any operational system.

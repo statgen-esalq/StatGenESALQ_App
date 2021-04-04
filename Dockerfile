@@ -35,7 +35,7 @@ RUN Rscript -e 'BiocManager::install("multtest")'
 
 COPY ./ /tmp/app/
 RUN R -e 'remotes::install_local("/tmp/app")'
-EXPOSE 85/tcp
+EXPOSE 80/tcp
 RUN rm /srv/shiny-server/index.html
 COPY ./inst/app /srv/shiny-server/
 COPY ./inst/app/shiny-server.conf /etc/shiny-server/shiny-server.conf
