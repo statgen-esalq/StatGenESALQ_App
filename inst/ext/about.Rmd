@@ -1,0 +1,18 @@
+---
+title: "StatGen- ESALQ App"
+output: html_document
+---
+
+This tools are in constant development by members of ESALQ/USP Statistical Genetics Laboratory.
+
+This shiny app performs statistical genetics analysis for diverse purposes. Please, check the left menu items for each feature detailed description.
+
+Overview of features:
+
+* Single environment analysis
+
+* Multi environment analysis
+
+* Assumptions tests
+
+* Selection indices
