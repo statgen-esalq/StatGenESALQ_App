@@ -34,7 +34,8 @@ mod_METassumptionsTest_ui <- function(id){
                  box(width = 6,
                      radioButtons(ns("assum4"), label = p("Select the transformation type:"),
                                   choices = list("none" = "none","log" = "log", "sqrt(x + 0.5)" = "sqrt(x + 0.5)", "boxcox" = "boxcox"),
-                                  selected = "none"),
+                                  selected = "none"), hr(),
+                     p("If your data still not present the assumptions safter transformation, we suggest the usage of Generalized Linear Models (still not implemented in this app).")
                  ),
                  box(width = 6,
                      radioButtons(ns("assum2"), label = p("Choose the traits to be evaluated:"),

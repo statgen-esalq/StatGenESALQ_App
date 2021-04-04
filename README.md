@@ -1,8 +1,3 @@
----
-title: "StatGen- ESALQ App"
-output: html_document
----
-
 This tools are in constant development by members of ESALQ/USP Statistical Genetics Laboratory. Feel free to contribute sending pull requests or contacting one of us.
 
 This shiny app performs statistical genetics analysis for diverse purposes. Please, check the left menu items for each feature detailed description.
