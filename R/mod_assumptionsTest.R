@@ -25,7 +25,7 @@ mod_assumptionsTest_ui <- function(id){
                    The adjusted phenotypic means should be included in extra columns. Download here an input file example:"),
                  downloadButton(ns("assum_input_exemple")), hr(),
                  p("Upload here your file:"),
-                 fileInput("data_assum", label = h6("File: data.txt"), multiple = F),
+                 fileInput(ns("data_assum"), label = h6("File: data.txt"), multiple = F),
                  p("If you do not have an file to be upload you can still check this app features with our example file. The example file is automatically upload, you just need to procedure to the other buttons."),
                  br(),
                  actionButton(ns("assum1"), "Read the file",icon("refresh")), hr()
@@ -136,6 +136,7 @@ mod_assumptionsTest_server <- function(input, output, session){
   )
   
   button_assum1 <- eventReactive(input$assum1, {
+    str(input$data_assum)
     if(is.null(input$data_assum)){
       if(input$assum_design == "block"){
         dat <- read.csv(system.file("ext","example_inputs/example_blocks.csv", package = "StatGenESALQ"))
@@ -143,9 +144,9 @@ mod_assumptionsTest_server <- function(input, output, session){
         dat <- read.csv(system.file("ext","example_inputs/example_lattice.csv", package = "StatGenESALQ"))
       }
     } else {
-      dat <- read.csv(input$data_assum)
+      dat <- read.csv(input$data_assum$datapath)
     }
-    str(dat)
+    cat(colnames(dat))
     dat
   })
   
@@ -202,7 +203,6 @@ mod_assumptionsTest_server <- function(input, output, session){
         incProgress(0.5, detail = paste("Doing part", 2))
         
       } else {
-        str(dat)
         if(!all(c("local", "block", "gen", "rep") %in% colnames(dat)))
           stop(safeError("Alpha lattice design should have columns 'local', 'block', 'rep', and 'gen'."))
         dat$rep <- as.factor(dat$rep)

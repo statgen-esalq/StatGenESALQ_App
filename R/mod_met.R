@@ -23,7 +23,7 @@ mod_met_ui <- function(id){
                  p("The input file is a tab delimited table with a column called 'local' defining the environment, other called 'gen' defining the genotypes and other called 'block' defining the block number. The adjusted phenotypic means should be included in extra columns. Download here an input file example:"),
                  downloadButton(ns("met_input_exemple")), hr(),
                  p("Upload here your file:"),
-                 fileInput("data_met", label = h6("File: data.txt"), multiple = F),
+                 fileInput(ns("data_met"), label = h6("File: data.txt"), multiple = F),
                  p("If you do not have an file to be upload you can still check this app features with our example file. The example file is automatically upload, you just need to procedure to the other buttons."),
                  br(),
                  actionButton(ns("met1"), "Read the file",icon("refresh")), hr()
@@ -131,7 +131,7 @@ mod_met_server <- function(input, output, session){
     if(is.null(input$data_met)){
       dat <- read.csv(system.file("ext","example_inputs/example_blocks.csv", package = "StatGenESALQ"))
     } else {
-      dat <- read.csv(input$data_met)
+      dat <- read.csv(input$data_met$datapath)
     }
     dat
   })
