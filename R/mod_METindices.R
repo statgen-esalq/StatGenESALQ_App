@@ -337,7 +337,7 @@ mod_METindices_server <- function(input, output, session){
   button_indice6 <- eventReactive(input$SG_button, {
     pheno <- button_indice2()$adjusted_means[,c(1,which(colnames(button_indice2()$adjusted_means) == input$indice4))]
     herdability <- button_indice2()$genetic_parameters[which(button_indice2()$genetic_parameters$pheno == input$indice4),"h2"]
-    result <- selection_gain(pheno = pheno, herdability,selected_ind = input$genotypes)
+    result <- selection_gain(pheno = pheno, herdability,selected_geno = input$genotypes)
     result
   })
   
