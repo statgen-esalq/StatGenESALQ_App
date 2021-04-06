@@ -14,13 +14,23 @@ Features implemented by now:
 
 ## Quick start
 
-There are three ways of using this app:
+There are four ways of using this app:
 
 * (Exclusive for courses) Access: [https://statgen.esalq.usp.br/epagriApp/](https://statgen.esalq.usp.br/epagriApp/)
 
 We use this App for didactic purposes. In our server version, we store real data as examples for our courses. If you are participating of some of or courses, please send us an e-mail requesting your login and password (chtaniguti in usp.br).
 
-* (Public access) Run directly from github:
+* (Public access) Install the package locally and run the app:
+
+```{r, eval=FALSE}
+devtools::install_github("statgen-esalq/StatGenESALQ_App")
+library(StatGenESALQ)
+run_app()
+```
+
+Because this shiny App is made using [Golem](https://golemverse.org/), it works like a package and the dependencies will be automatically installed. 
+
+* (Public access) Run directly from GitHub:
 
 ```{r, eval=FALSE}
 runGitHub("statgen-esalq/StatGenESALQ_App", ref="main")
@@ -28,7 +38,7 @@ runGitHub("statgen-esalq/StatGenESALQ_App", ref="main")
 
 **PS:** [Why "main" and not "master"](https://www.zdnet.com/article/github-to-replace-master-with-main-starting-next-month/#:~:text=GitHub%20repositories%20are%20where%20users,of%20a%20source%20code%20repository.&text=1%2C%202020%2C%20any%20new%20repositories,master%2C%22%20the%20company%20said.).
 
-Because this shiny App is made using [Golem](https://golemverse.org/), it works like a package and the dependencies will be automatically installed. 
+It will require that the dependencies packages are already installed.
 
 * (Public access) Install [Docker](https://www.docker.com/get-started) and access the app via container:
 
