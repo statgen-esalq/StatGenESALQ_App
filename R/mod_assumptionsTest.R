@@ -10,7 +10,7 @@
 mod_assumptionsTest_ui <- function(id){
   ns <- NS(id)
   tagList(
-    fluidRow(style = "height:6000px",
+    fluidRow(style = "height:8000px",
              box(width = 12, 
                  p("Here we present several tests for checking model assumptions for single trait and environment.")
              ),

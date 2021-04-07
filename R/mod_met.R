@@ -10,7 +10,7 @@
 mod_met_ui <- function(id){
   ns <- NS(id)
   tagList(
-    fluidRow(style = "height:5000px",
+    fluidRow(style = "height:8000px",
              box(width = 12, 
                  p("Here we present a graphic interface for the R package 'metan' functions. The package presents other features and options not implemented here.")
              ),

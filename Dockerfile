@@ -31,6 +31,8 @@ RUN Rscript -e 'remotes::install_version("lmtest",upgrade="never", version = "0.
 RUN Rscript -e 'remotes::install_version("car",upgrade="never", version = "3.0-10")'
 RUN Rscript -e 'remotes::install_version("psych",upgrade="never", version = "2.0.12")'
 RUN Rscript -e 'remotes::install_version("BiocManager",upgrade="never", version = "1.30.10")'
+RUN Rscript -e 'remotes::install_version("sommer",upgrade="never", version = "4.1.2")'
+RUN Rscript -e 'remotes::install_version("AGHmatrix",upgrade="never", version = "2.0.0")'
 RUN Rscript -e 'BiocManager::install("multtest")'
 
 COPY ./ /tmp/app/

@@ -128,12 +128,16 @@ analysis_fixed_effects <- function(df, design, multi_env){
     param <- data.frame(pheno, var_g = vg, var_pheno = vf, h2 = h2, cv = CV)
   }
   colnames(df_emm) <- c("gen", pheno)
+  ## round
+  param[,-1] <- round(param[,-1],2)
+  df_emm[,-1] <- round(df_emm[,-1],2)
+  
   results <- list(genetic_parameters = param, 
                   adjusted_means = df_emm, 
-                  genetic_covariance = cvg, 
-                  phenotypic_covariance = cvf, 
-                  genetic_correlation = corrg, 
-                  phenotypic_correlation = corrf)
+                  genetic_covariance = round(cvg,2), 
+                  phenotypic_covariance = round(cvf,2), 
+                  genetic_correlation = round(corrg,2), 
+                  phenotypic_correlation = round(corrf,2))
   
   return(results)
 }
@@ -248,7 +252,7 @@ smith_hazel <- function(adj.means, cvf, cvg, weights = NULL){
   weights <- as.numeric(weights)
   w <- solve(cvf)%*%cvg%*%weights
   Is = as.matrix(adj.means[,-1])%*%w
-  smith_df <- data.frame(gen = adj.means[,1], smith_hazel_index = Is)
+  smith_df <- data.frame(gen = round(adj.means[,1],2), smith_hazel_index = round(Is,2))
   head(smith_df)
 }
 
@@ -266,4 +270,82 @@ selection_gain <- function(pheno, selected_geno, herdability){
   I <- (length(selected[,1])/length(pheno[,1]))*100
   result <- data.frame(`Selection gain` = SG, `Selection intensity_percentage` = I)
   return(result)
+}
+
+##' Safety-first index
+##'
+##' @param df data.frame  
+##' @param trait Random variable 
+##' @param design block or lattice
+##' @param alpha numeric
+##' 
+safety_first <- function(df, pheno, design, alpha = 0.95) {
+  trait <- parse(text = pheno)
+  Envs <- levels(df$local)
+  results <- vector("list", length(Envs))
+  # Loops Envs
+  for (i in Envs) {
+    Edat <- droplevels(subset(df, local == i))
+    if (design == "block") {
+      # design
+      mod <- aov(eval(trait) ~ gen + block,
+                 data = Edat)
+    } else {
+      mod <- aov(eval(trait) ~ gen + rep + block,
+                 data = Edat)
+    }
+    temp = data.frame(lsmeans(mod, ~ gen))
+    results[[i]] <- data.frame(
+      gen = temp$gen,
+      trait = temp$lsmean,
+      local = factor(levels(Edat$local)),
+      local_mean = mean(temp$lsmean)
+    )
+    rm(Edat, mod, temp)
+  }
+  # Adj. means
+  StageI <- do.call(rbind, results)
+  colnames(StageI)[2] <- pheno
+  StageI_H <-
+    matrix(StageI[,pheno], nlevels(df$gen), nlevels(df$local)) # n_g x n_l
+  # Yi. - Z(1 - \alpha)(Vi)^0.5
+  Vii <- apply(StageI_H, 1, sd)
+  Yi. <- apply(StageI_H, 1, mean)
+  # Z tab
+  Z <- qnorm(p = alpha)
+  # Safety-first index
+  Risk_F <- round(Yi. - (Z * Vii), 2)
+  Risk_F <- data.frame(Risk_F, ID = levels(df$gen))
+  Risk_F <- Risk_F[order(Risk_F$Risk_F, decreasing = TRUE),]
+  Risk_F$ID = factor(Risk_F$ID, levels = Risk_F$ID)
+  return(Risk_F)
+}
+
+##' Reliability index
+##' 
+##' @param df data.frame
+##' @param Ann Annicchiarico output
+##' @param pheno character with trait ID
+##' 
+reliability_index <- function(dat, Ann, pheno){
+  # Pij = Yij/Y.j X 100
+  envs <- levels(dat$local)
+  Pij <- vector("list", length(envs))
+  # loop
+  for(i in 1:length(envs)){
+    edat = droplevels(subset(dat, local == envs[i]))
+    mean = mean(edat[,pheno])
+    Pij[[i]] = round((tapply(edat[,pheno], edat$gen, mean)/mean)*100,0)
+  }
+  
+  # Pij
+  Pij = t(do.call(rbind,Pij))
+  
+  # Reliability index 
+  # Ii = pi. - ZxSi  
+  Z = qnorm(p = 0.75)
+  I = round(apply(Pij, 1, mean) - (apply(Pij, 1, sd)*Z), 0)
+  idx <- data.frame(ID= names(I), index = I)
+  rownames(idx) <- NULL
+  return(idx)
 }

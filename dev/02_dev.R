@@ -25,6 +25,10 @@ usethis::use_package( "psych" )
 usethis::use_package( "multtest" )
 usethis::use_package( "emmeans" )
 usethis::use_package( "MASS" )
+usethis::use_package( "scales" )
+usethis::use_package( "sommer" )
+usethis::use_package( "dplyr" )
+usethis::use_package( "AGHmatrix" )
 
 ## Add modules ----
 ## Create a module infrastructure in R/

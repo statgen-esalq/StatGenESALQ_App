@@ -21,10 +21,10 @@ app_ui <- function(request) {
                    menuSubItem("Selection indices", tabName = "indices", icon = icon("crosshairs"))
                    ),
           menuItem("Multi environment", tabName = "multi", icon = icon("circle"),
-                   menuSubItem("Assumptions test", tabName = "METassumptionsTest", icon = icon("crosshairs")),
+                   #menuSubItem("Assumptions test", tabName = "METassumptionsTest", icon = icon("crosshairs")),
                    menuSubItem("Selection indices", tabName = "METindices", icon = icon("crosshairs")),
                    menuSubItem("Stability analysis", tabName = "MET_metan", icon = icon("crosshairs")),
-                   menuSubItem("Mixed models", tabName = "mix_midel", icon = icon("crosshairs"))
+                   menuSubItem("Mixed models", tabName = "mixedModel", icon = icon("crosshairs"))
                    ),
           tags$li(class = "dropdown",
                   tags$a(href="https://statgen-esalq.github.io/", target="_blank", 
@@ -113,14 +113,17 @@ app_ui <- function(request) {
           tabItem(tabName = "indices",
                   mod_indices_ui("indices_ui_1")
           ),
-          tabItem(tabName = "METassumptionsTest",
-                  mod_METassumptionsTest_ui("METassumptionsTest_ui_1")
-          ),
+          # tabItem(tabName = "METassumptionsTest",
+          #         mod_METassumptionsTest_ui("METassumptionsTest_ui_1")
+          # ),
           tabItem(tabName = "METindices",
                   mod_METindices_ui("METindices_ui_1")
           ),
           tabItem(tabName = "MET_metan",
                   mod_met_ui("met_ui_1")
+          ),
+          tabItem(tabName = "mixedModel",
+                  mod_MixedModel_ui("MixedModel_ui_1")
           )
         )
       )

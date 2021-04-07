@@ -10,7 +10,7 @@
 mod_indices_ui <- function(id){
   ns <- NS(id)
   tagList(
-    fluidRow(style = "height:5000px",
+    fluidRow(style = "height:8000px",
              box(width = 12, 
                  p("Here you can obtain the variance/covariance matrix, herdability, selection gain and 
                    selection indices for Randomized complete block and 
@@ -272,7 +272,11 @@ mod_indices_server <- function(input, output, session){
     if(input$k == "Ex: 12,45,123"){
       k <- NULL
     } else {
-      k <- unlist(strplit(input$k, ","))
+      k <- unlist(strsplit(input$k, ","))
+      if(length(k) != length(colnames(button_indice2()$adjusted_means)[-1]))
+        stop(safeError(paste0("You must provide a minimum/maximum value for every evaluated trait.
+                       You provided ", length(k), " values and ", length(colnames(button_indice2()$adjusted_means)[-1]),
+                              " are required.")))
     }
     if(input$increasing == "Ex: alt, fert"){
       increasing <- NULL
@@ -296,7 +300,11 @@ mod_indices_server <- function(input, output, session){
     if(input$weights == "Ex: 1,1,2"){
       weights <- NULL
     } else {
-      weights <- unlist(strplit(input$weights, ","))
+      weights <- unlist(strsplit(input$weights, ","))
+      if(length(weights) != length(colnames(button_indice2()$adjusted_means)[-1]))
+        stop(safeError(paste0("You must provide a minimum/maximum value for every evaluated trait.
+                       You provided ", length(weights), " values and ", length(colnames(button_indice2()$adjusted_means)[-1]),
+                              " are required.")))
     }
     
     if(input$increasing == "Ex: alt, fert"){
@@ -321,7 +329,11 @@ mod_indices_server <- function(input, output, session){
     if(input$weights1 == "Ex: 1,1,2"){
       weights <- NULL
     } else {
-      weights <- unlist(strplit(input$weights1, ","))
+      weights <- unlist(strsplit(input$weights1, ","))
+      if(length(weights) != length(colnames(button_indice2()$adjusted_means)[-1]))
+        stop(safeError(paste0("You must provide a minimum/maximum value for every evaluated trait.
+                       You provided ", length(weights), " values and ", length(colnames(button_indice2()$adjusted_means)[-1]),
+                              " are required.")))
     }
     smith_hazel(adj.means = button_indice2()$adjusted_means,
                 cvg = button_indice2()$genetic_covariance, 
