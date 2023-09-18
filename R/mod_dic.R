@@ -7,17 +7,12 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
-mod_assumptionsTest_ui <- function(id){
+mod_dic_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidRow(style = "height:8000px",
-             box(width = 12, 
+             box(width = 12, title = "Completely Randomized Design", 
                  p("Here we present several tests for checking model assumptions for single trait and environment.")
-             ),
-             box(width = 12,
-                 selectInput(ns("assum_design"), label = h4("Experiment design"), 
-                             choices = list("Completely randomized" = "crd" ,"Randomized complete block" = "block", "Alpha lattice" = "lattice"), 
-                             selected = "block")
              ),
              box(width = 12, solidHeader = TRUE, collapsible = TRUE, status="primary", title = "Input file",
                  p("The input file is a tab delimited table with a column called 'local' defining the environment, 
@@ -112,11 +107,11 @@ mod_assumptionsTest_ui <- function(id){
              ),
              box(width = 12, solidHeader = TRUE, collapsible = TRUE, collapsed = T, status="info", title = "Bonferroni-Holm tests for the adjusted p-values",
                  tableOutput(ns("assum_out_out"))
-             ),
-             box(width = 12, solidHeader = TRUE, collapsible = TRUE, collapsed = T, status="info", title = "Variance Inflation Factors",
-                 p("Checking multicollinearity: VIF value higher than 10 indicates multicollinearity."),
-                 tableOutput(ns("assum_vif_out"))
              )
+             # box(width = 12, solidHeader = TRUE, collapsible = TRUE, collapsed = T, status="info", title = "Variance Inflation Factors",
+             #     p("Checking multicollinearity: VIF value higher than 10 indicates multicollinearity."),
+             #     tableOutput(ns("assum_vif_out"))
+             # )
     )
   )
 }
@@ -129,9 +124,10 @@ mod_assumptionsTest_ui <- function(id){
 #' @import car
 #' @import psych
 #' @import multtest
+#' @import MASS
 #' 
 #' @noRd 
-mod_assumptionsTest_server <- function(input, output, session){
+mod_dic_server <- function(input, output, session){
   ns <- session$ns
   ## download input
   output$assum_input_exemple <- downloadHandler(
@@ -140,13 +136,10 @@ mod_assumptionsTest_server <- function(input, output, session){
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      if(input$assum_design == "block"){
-        dat <- read.csv(system.file("ext","example_inputs/example_blocks.csv", package = "StatGenESALQ"))
-      } else {
-        dat <- read.csv(system.file("ext","example_inputs/example_lattice.csv", package = "StatGenESALQ"))
-      }
+      # I have to change this example to CRD
+      dat <- read.csv(system.file("ext","example_inputs/example_blocks.csv", package = "StatGenESALQ"))
       write.csv(dat, file = file, row.names = F)
-    } 
+    }
   )
   
   #Tratamento de dados possibilitando a utilização de .txt e .csv
@@ -169,11 +162,8 @@ mod_assumptionsTest_server <- function(input, output, session){
     str(input$data_assum)
     #Aqui esta pegando os exemplos
     if(is.null(input$data_assum)){
-      if(input$assum_design == "block"){
-        dat <- read.csv(system.file("ext","example_inputs/example_blocks.csv", package = "StatGenESALQ"))
-      } else {
-        dat <- read.csv(system.file("ext","example_inputs/example_lattice.csv", package = "StatGenESALQ"))
-      }
+      # I have to change this example to CRD
+      dat <- read.csv(system.file("ext","example_inputs/example_blocks.csv", package = "StatGenESALQ"))
     } else {
       #Aqui entra o upload
       dat <- read.csv(input$data_assum$datapath,
@@ -185,13 +175,16 @@ mod_assumptionsTest_server <- function(input, output, session){
   
   observe({
     #I need change that, it's the problem
+    # '%in%' - is used to check if the values of the first argument are present in the second argument, returning true or false.
+    # Aqui precisamos pensar se deixameremos esse padrão dados de entrada ou deixaremos mais livre porém com possibilidade de dar ruim.
     if(any(colnames(button_assum1()) %in% "rep"))
-      choices_trait_temp <- colnames(button_assum1())[-c(1:4)] else
-        choices_trait_temp <- colnames(button_assum1())[-c(1:3)]
+      choices_trait_temp <- colnames(button_assum1())[-c(1:3)] else
+        choices_trait_temp <- colnames(button_assum1())[-c(1:2)]
       
       choices_trait <- choices_trait_temp
       names(choices_trait) <- choices_trait_temp
       
+      #Opção de colocar um 'if' aqui, a fim de obter duas UI diferentes
       choices_locations_temp <- unique(button_assum1()[,"local"])
       choices_locations <- choices_locations_temp
       names(choices_locations) <- choices_locations_temp
@@ -207,53 +200,35 @@ mod_assumptionsTest_server <- function(input, output, session){
                          selected = unlist(choices_locations)[1])
   })
   
+  #Tudo certo até aqui
+  
   button_assum2 <- eventReactive(input$assum5, {
+    #Precisa melhorar isso - Barra de progresso
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       dat <- button_assum1()
-      dat$block <- as.factor(dat$block)
+      # dat$block <- as.factor(dat$block)
       dat$gen <- as.factor(dat$gen)
       dat$local <- as.factor(dat$local)
       
-      if(input$assum_design == "block"){
-        if(!all(c("local", "block", "gen") %in% colnames(dat)) | ("rep" %in% colnames(dat)))
-          stop(safeError("Randomized complete block design should have columns 'local', 'block' and 'gen'."))
+      if(is.null(input$data_assum) == F){
+        if(!all(c("local", "gen") %in% colnames(dat)))
+          stop(safeError("Completely randomized design should have columns 'local' and 'gen'."))
         dat <- dat %>% select(c("local", "gen", "block",input$assum2)) %>%
           filter(local == input$assum3) %>% droplevels()
+        # The droplevels() function is a built-in function in R that is used to remove unused levels from a factor or a categorical variable.
         
         if(input$assum4 == "none"){
-          mod <- run_models(df = dat, pheno = dat[,input$assum2] ,design = "DBC", multi_env = F)
+          mod <- run_models(df = dat, pheno = dat[,input$assum2] ,design = "CRD", multi_env = F)
         } else if(input$assum4 == "log"){
-          mod <- run_models(df = dat, pheno = log(dat[,input$assum2]) ,design = "DBC", multi_env = F)
-          
+          mod <- run_models(df = dat, pheno = log(dat[,input$assum2]) ,design = "CRD", multi_env = F)
         } else if(input$assum4 == "sqrt(x + 0.5)"){
-          mod <- run_models(df = dat, pheno = sqrt(dat[,input$assum2] + 0.5) ,design = "DBC", multi_env = F)
-          
+          mod <- run_models(df = dat, pheno = sqrt(dat[,input$assum2] + 0.5) ,design = "CRD", multi_env = F)
         } else if(input$assum4 == "boxcox"){
-          mod <- run_models_boxcox(df = dat, pheno = dat[,input$assum2] ,design = "DBC", multi_env = F)
+          mod <- run_models_boxcox(df = dat, pheno = dat[,input$assum2] ,design = "CRD", multi_env = F)
         } 
         
         incProgress(0.5, detail = paste("Doing part", 2))
-        
-      } else {
-        if(!all(c("local", "block", "gen", "rep") %in% colnames(dat)))
-          stop(safeError("Alpha lattice design should have columns 'local', 'block', 'rep', and 'gen'."))
-        dat$rep <- as.factor(dat$rep)
-        dat <- dat %>% select(c("local", "gen", "block","rep",input$assum2)) %>%
-          filter(local == input$assum3) %>% droplevels()
-        dat$rep <- as.factor(dat$rep)
-        
-        if(input$assum4 == "none"){
-          mod <- run_models(df = dat, pheno = dat[,input$assum2] ,design = "lattice", multi_env = F)
-        } else if(input$assum4 == "log"){
-          mod <- run_models(df = dat, pheno = log(dat[,input$assum2]) ,design = "lattice", multi_env = F)
-          
-        } else if(input$assum4 == "sqrt(x + 0.5)"){
-          mod <- run_models(df = dat, pheno = sqrt(dat[,input$assum2] + 0.5) ,design = "lattice", multi_env = F)
-          
-        } else if(input$assum4 == "boxcox"){
-          mod <- run_models_boxcox(df = dat, pheno = dat[,input$assum2] ,design = "lattice", multi_env = F)
-        } 
       }
       
       sha <- shapiro.test(mod$residuals)
@@ -273,6 +248,9 @@ mod_assumptionsTest_server <- function(input, output, session){
       list(mod,df,dur_df,bp_df, dat)
     })
   })
+  #Finish Eventreactive and Progress bar
+  
+  #Stop here
   
   output$assum1_plot_out <- renderPlot({
     autoplot(button_assum2()[[1]], which = 1, data = button_assum2()[[5]],
@@ -339,9 +317,10 @@ mod_assumptionsTest_server <- function(input, output, session){
     as.data.frame(outlier(button_assum2()[[1]]$residuals))
   })
   
-  output$assum_vif_out <- renderTable({
-    as.data.frame(vif(button_assum2()[[1]]))
-  })
+  #Review that - Problem
+  # output$assum_vif_out <- renderTable({
+  #   as.data.frame(vif(button_assum2()[[1]]))
+  # })
   
 }
 
@@ -382,12 +361,24 @@ outlier <- function(resid, alpha=0.05){
   return(outliers_BH_df)
 }
 
-
 ##' Utilities
-##' 
+##' Run linear models - boxcox
 ##' @import MASS
 run_models_boxcox <-function(pheno, df, design, multi_env){
-  if(design == "DBC"){
+  if(design == "CRD"){
+    if(multi_env){
+      bc <- boxcox(pheno ~ df$gen + df$local/df$local + df$gen*df$local, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+      mod <- lm(pheno_trans ~ df$gen + df$local/df$local + df$gen*df$local)
+      
+    } else {
+      bc <- boxcox(pheno ~ df$gen, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+      mod <- lm(pheno_trans ~ df$gen)
+    }
+  } else if(design == "DBC"){
     if(multi_env){
       bc <- boxcox(pheno ~ df$gen + df$local/df$block + df$local + df$gen*df$local, plotit=F, lam=seq(-3, 3, 1/20))
       lambda <- bc$x[which.max(bc$y)]
@@ -401,14 +392,14 @@ run_models_boxcox <-function(pheno, df, design, multi_env){
       
       mod <- lm(pheno_trans ~ df$gen + df$block)
     }
-  } else {
+  } else if(design == "lattice") {
     if(multi_env){
-      bc <- boxcox(pheno ~ df$gen + df$local/df$rep/df$block + 
+      bc <- boxcox(pheno ~ df$gen + df$local/df$rep/df$block +
                      df$local/df$rep + df$local + df$gen*df$local, plotit=F, lam=seq(-3, 3, 1/20))
       lambda <- bc$x[which.max(bc$y)]
       pheno_trans <- ((pheno^lambda-1)/lambda)
       
-      mod <- lm(pheno_trans ~ df$gen + df$local/df$rep/df$block + 
+      mod <- lm(pheno_trans ~ df$gen + df$local/df$rep/df$block +
                   df$local/df$rep + df$local + df$gen*df$local)
     } else {
       bc <- boxcox(pheno ~ df$gen + df$rep/df$block, plotit=F, lam=seq(-3, 3, 1/20))

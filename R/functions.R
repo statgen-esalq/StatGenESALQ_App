@@ -144,19 +144,291 @@ analysis_fixed_effects <- function(df, design, multi_env){
 
 ##' Run linear models
 run_models <-function(pheno, df, design, multi_env){
-  if(design == "DBC"){
+  if(design == "CRD"){
+    if(multi_env){
+      mod <- lm(pheno ~ df$gen/df$local + df$gen*df$local)
+    } else {
+      mod <- lm(pheno ~ df$gen)
+    }
+  } else if(design == "DBC"){
     if(multi_env){
       mod <- lm(pheno ~ df$gen + df$local/df$block + df$local + df$gen*df$local)
     } else {
       mod <- lm(pheno ~ df$gen + df$block)
     }
-  } else {
+  } else if(design == "lattice"){
     if(multi_env){
       mod <- lm(pheno ~ df$gen + df$local/df$rep/df$block + 
                   df$local/df$rep + df$local + df$gen*df$local)
     } else {
       mod <- lm(pheno ~ df$gen + df$rep/df$block)
     }
+  }
+  else if(design == "RBSP"){
+    
+    df$block <- as.random(df$block)
+    df$time <- as.fixed(df$time)
+    df$gen <- as.fixed(df$gen)
+    
+    if(multi_env){
+      # mod <- lm(pheno ~ df$gen + df$local/df$rep/df$block + 
+      #             df$local/df$rep + df$local + df$gen*df$local)
+    } else {
+      mod <- lm(pheno ~ df$block + df$time + df$time/df$block + df$gen + df$time:df$gen)
+      # mod <- lm(pheno ~ block + time + block/time + gen + time:gen)
+    }
+  }
+  else if(design == "CRSP"){
+    
+    df$rep <- as.random(df$rep)
+    df$time <- as.fixed(df$time)
+    df$gen <- as.fixed(df$gen)
+    
+    if(multi_env){
+      # mod <- lm(pheno ~ df$gen + df$local/df$rep/df$block + 
+      #             df$local/df$rep + df$local + df$gen*df$local)
+    } else {
+      mod <- lm(pheno ~ df$time + df$time/df$rep + df$gen + df$time:df$gen)
+    }
+  }
+  return(mod)
+}
+
+
+run_models_sp <-function(pheno, whole_f, split_f, df, design, multi_env){
+  if(design == "CRD"){
+    if(multi_env){
+      mod <- lm(pheno ~ df$gen/df$local + df$gen*df$local)
+    } else {
+      mod <- lm(pheno ~ df$gen)
+    }
+  } else if(design == "DBC"){
+    if(multi_env){
+      mod <- lm(pheno ~ df$gen + df$local/df$block + df$local + df$gen*df$local)
+    } else {
+      mod <- lm(pheno ~ df$gen + df$block)
+    }
+  } else if(design == "lattice"){
+    if(multi_env){
+      mod <- lm(pheno ~ df$gen + df$local/df$rep/df$block + 
+                  df$local/df$rep + df$local + df$gen*df$local)
+    } else {
+      mod <- lm(pheno ~ df$gen + df$rep/df$block)
+    }
+  }
+  else if(design == "RBSP"){
+    
+    block <- as.random(df$block)
+    whole_f <- as.fixed(whole_f)
+    split_f <- as.fixed(split_f)
+    
+    if(multi_env){
+      # mod <- lm(pheno ~ df$gen + df$local/df$rep/df$block + 
+      #             df$local/df$rep + df$local + df$gen*df$local)
+    } else {
+      mod <- lm(pheno ~ block + whole_f + whole_f/block + split_f + whole_f:split_f)
+      # mod <- lm(pheno ~ block + time + block/time + gen + time:gen)
+    }
+  }
+  else if(design == "CRSP"){
+    
+    rep <- as.random(df$rep)
+    whole_f <- as.fixed(whole_f)
+    split_f <- as.fixed(split_f)
+    
+    if(multi_env){
+      # mod <- lm(pheno ~ df$gen + df$local/df$rep/df$block + 
+      #             df$local/df$rep + df$local + df$gen*df$local)
+    } else {
+      mod <- lm(pheno ~ whole_f + whole_f/rep + split_f + whole_f:split_f)
+    }
+  }
+  return(mod)
+}
+
+
+##' Utilities
+##' Run linear models - boxcox
+#' @import MASS
+run_models_boxcox <-function(pheno, df, design, multi_env){
+  if(design == "CRD"){
+    if(multi_env){
+      bc <- boxcox(pheno ~ df$gen + df$local/df$local + df$gen*df$local, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+      mod <- lm(pheno_trans ~ df$gen + df$local/df$local + df$gen*df$local)
+      
+    } else {
+      bc <- boxcox(pheno ~ df$gen, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+      mod <- lm(pheno_trans ~ df$gen)
+    }
+  } else if(design == "DBC"){
+    if(multi_env){
+      bc <- boxcox(pheno ~ df$gen + df$local/df$block + df$local + df$gen*df$local, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+      mod <- lm(pheno_trans ~ df$gen + df$local/df$block + df$local + df$gen*df$local)
+      
+    } else {
+      bc <- boxcox(pheno ~ df$gen + df$block, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+      
+      mod <- lm(pheno_trans ~ df$gen + df$block)
+    }
+  } else if(design == "lattice") {
+    if(multi_env){
+      bc <- boxcox(pheno ~ df$gen + df$local/df$rep/df$block +
+                     df$local/df$rep + df$local + df$gen*df$local, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+
+      mod <- lm(pheno_trans ~ df$gen + df$local/df$rep/df$block +
+                  df$local/df$rep + df$local + df$gen*df$local)
+    } else {
+      bc <- boxcox(pheno ~ df$gen + df$rep/df$block, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+
+      mod <- lm(pheno_trans ~ df$gen + df$rep/df$block)
+    }
+  } else if(design == "RBSP") {
+    
+    df$block <- as.random(df$block)
+    df$time <- as.fixed(df$time)
+    df$gen <- as.fixed(df$gen)
+    
+    # if(multi_env){
+    #   bc <- boxcox(pheno ~ df$gen + df$local/df$rep/df$block +
+    #                  df$local/df$rep + df$local + df$gen*df$local, plotit=F, lam=seq(-3, 3, 1/20))
+    #   lambda <- bc$x[which.max(bc$y)]
+    #   pheno_trans <- ((pheno^lambda-1)/lambda)
+    #   
+    #   mod <- lm(pheno_trans ~ df$gen + df$local/df$rep/df$block +
+    #               df$local/df$rep + df$local + df$gen*df$local)
+    # } else {
+      bc <- boxcox(pheno ~ df$block + df$time + df$block/df$time + df$gen + df$time:df$gen, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+      
+      mod <- lm(pheno_trans ~ df$block + df$time + df$block/df$time + df$gen + df$time:df$gen)
+      #   }
+  }
+  else if(design == "CRSP") {
+    
+    df$rep <- as.random(df$rep)
+    df$time <- as.fixed(df$time)
+    df$gen <- as.fixed(df$gen)
+    
+    # if(multi_env){
+    #   bc <- boxcox(pheno ~ df$gen + df$local/df$rep/df$block +
+    #                  df$local/df$rep + df$local + df$gen*df$local, plotit=F, lam=seq(-3, 3, 1/20))
+    #   lambda <- bc$x[which.max(bc$y)]
+    #   pheno_trans <- ((pheno^lambda-1)/lambda)
+    #   
+    #   mod <- lm(pheno_trans ~ df$gen + df$local/df$rep/df$block +
+    #               df$local/df$rep + df$local + df$gen*df$local)
+    # } else {
+    bc <- boxcox(pheno ~ df$time + df$time/df$rep + df$gen + df$time:df$gen, plotit=F, lam=seq(-3, 3, 1/20))
+    lambda <- bc$x[which.max(bc$y)]
+    pheno_trans <- ((pheno^lambda-1)/lambda)
+    
+    mod <- lm(pheno_trans ~ df$time + df$time/df$rep + df$gen + df$time:df$gen)
+    #   }
+  }
+  return(mod)
+}
+
+
+run_models_boxcox_sp <-function(pheno, whole_f, split_f, df, design, multi_env){
+  if(design == "CRD"){
+    if(multi_env){
+      bc <- boxcox(pheno ~ df$gen + df$local/df$local + df$gen*df$local, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+      mod <- lm(pheno_trans ~ df$gen + df$local/df$local + df$gen*df$local)
+      
+    } else {
+      bc <- boxcox(pheno ~ df$gen, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+      mod <- lm(pheno_trans ~ df$gen)
+    }
+  } else if(design == "DBC"){
+    if(multi_env){
+      bc <- boxcox(pheno ~ df$gen + df$local/df$block + df$local + df$gen*df$local, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+      mod <- lm(pheno_trans ~ df$gen + df$local/df$block + df$local + df$gen*df$local)
+      
+    } else {
+      bc <- boxcox(pheno ~ df$gen + df$block, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+      
+      mod <- lm(pheno_trans ~ df$gen + df$block)
+    }
+  } else if(design == "lattice") {
+    if(multi_env){
+      bc <- boxcox(pheno ~ df$gen + df$local/df$rep/df$block +
+                     df$local/df$rep + df$local + df$gen*df$local, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+      
+      mod <- lm(pheno_trans ~ df$gen + df$local/df$rep/df$block +
+                  df$local/df$rep + df$local + df$gen*df$local)
+    } else {
+      bc <- boxcox(pheno ~ df$gen + df$rep/df$block, plotit=F, lam=seq(-3, 3, 1/20))
+      lambda <- bc$x[which.max(bc$y)]
+      pheno_trans <- ((pheno^lambda-1)/lambda)
+      
+      mod <- lm(pheno_trans ~ df$gen + df$rep/df$block)
+    }
+  } else if(design == "RBSP") {
+    
+    block <- as.random(df$block)
+    whole_f <- as.fixed(whole_f)
+    split_f <- as.fixed(split_f)
+    
+    # if(multi_env){
+    #   bc <- boxcox(pheno ~ df$gen + df$local/df$rep/df$block +
+    #                  df$local/df$rep + df$local + df$gen*df$local, plotit=F, lam=seq(-3, 3, 1/20))
+    #   lambda <- bc$x[which.max(bc$y)]
+    #   pheno_trans <- ((pheno^lambda-1)/lambda)
+    #   
+    #   mod <- lm(pheno_trans ~ df$gen + df$local/df$rep/df$block +
+    #               df$local/df$rep + df$local + df$gen*df$local)
+    # } else {
+    bc <- boxcox(pheno ~ block + whole_f + whole_f/block + split_f + whole_f:split_f, plotit=F, lam=seq(-3, 3, 1/20))
+    lambda <- bc$x[which.max(bc$y)]
+    pheno_trans <- ((pheno^lambda-1)/lambda)
+    
+    mod <- lm(pheno_trans ~ block + whole_f + whole_f/block + split_f + whole_f:split_f)
+    #   }
+  }
+  else if(design == "CRSP") {
+    
+    rep <- as.random(df$rep)
+    whole_f <- as.fixed(whole_f)
+    split_f <- as.fixed(split_f)
+    
+    # if(multi_env){
+    #   bc <- boxcox(pheno ~ df$gen + df$local/df$rep/df$block +
+    #                  df$local/df$rep + df$local + df$gen*df$local, plotit=F, lam=seq(-3, 3, 1/20))
+    #   lambda <- bc$x[which.max(bc$y)]
+    #   pheno_trans <- ((pheno^lambda-1)/lambda)
+    #   
+    #   mod <- lm(pheno_trans ~ df$gen + df$local/df$rep/df$block +
+    #               df$local/df$rep + df$local + df$gen*df$local)
+    # } else {
+    bc <- boxcox(pheno ~ whole_f + whole_f/rep + split_f + whole_f:split_f, plotit=F, lam=seq(-3, 3, 1/20))
+    lambda <- bc$x[which.max(bc$y)]
+    pheno_trans <- ((pheno^lambda-1)/lambda)
+    
+    mod <- lm(pheno_trans ~ whole_f + whole_f/rep + split_f + whole_f:split_f)
+    #   }
   }
   return(mod)
 }
@@ -205,6 +477,7 @@ elston_index <- function(df, k=NULL, increasing=NULL){
   return(df_index)
 }
 
+
 ##' Mulamba and Mock (1978) selection index
 ##' 
 ##' @param df data.frame with first column called 'gen' with genotypes identification and follow columns with adjusted mean for each phenotype. 
@@ -235,6 +508,7 @@ mulamba_index <- function(df, increasing = NULL, weights = NULL){
   
   return(df_mulamba)
 }
+
 
 ##' Smith Hazel index
 ##' 
@@ -271,6 +545,7 @@ selection_gain <- function(pheno, selected_geno, herdability){
   result <- data.frame(`Selection gain` = SG, `Selection intensity_percentage` = I)
   return(result)
 }
+
 
 ##' Safety-first index
 ##'
@@ -320,6 +595,7 @@ safety_first <- function(df, pheno, design, alpha = 0.95) {
   Risk_F$ID = factor(Risk_F$ID, levels = Risk_F$ID)
   return(Risk_F)
 }
+
 
 ##' Reliability index
 ##' 

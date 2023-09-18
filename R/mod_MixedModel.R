@@ -187,15 +187,31 @@ mod_MixedModel_server <- function(input, output, session){
     })
   })
   
-  output$varcomp_out <- DT::renderDataTable(
-    DT::datatable(data.frame(button2()[[2]]$varcomp),  
+  output$varcomp_out <- DT::renderDataTable({
+    data <- data.frame(button2()[[2]]$varcomp)
+    
+    # Especifique as colunas que deseja arredondar e o número de casas decimais
+    # columns_to_round <- c("Sum.Sq", "Mean.Sq", "F.value", "Pr..F.", "outra_coluna1", "outra_coluna2")
+    decimal_places1 <- 4  # Especifique o número de casas decimais
+    
+    # Arredonde as colunas selecionadas
+    for (col in 1:3) {
+      data[[col]] <- round(as.numeric(data[[col]]), decimal_places1)
+    }
+    
+    # decimal_places1 <- 5
+    # for (col in 5) {
+    #   data[[col]] <- round(as.numeric(data[[col]]), decimal_places1)
+    # }
+    
+    DT::datatable(data,  
                   extensions = 'Buttons',
                   options = list(
                     dom = 'Bfrtlp',
                     buttons = c('copy', 'csv', 'excel', 'pdf')
                   ),
                   class = "display")
-  )
+  })
   
   output$aic_bic_out <- DT::renderDataTable(
     DT::datatable(data.frame(button2()[[3]]),  
