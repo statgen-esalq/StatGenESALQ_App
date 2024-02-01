@@ -31,7 +31,8 @@ Imports:
     scales,
     sommer,
     dplyr,
-    AGHmatrix
+    AGHmatrix,
+    GAD
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1

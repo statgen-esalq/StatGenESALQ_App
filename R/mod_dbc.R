@@ -7,18 +7,15 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
-mod_assumptionsTest_ui <- function(id){
+mod_dbc_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidRow(style = "height:8000px",
-             box(width = 12, 
+             box(width = 12, title = "Randomized complete block", 
                  p("Here we present several tests for checking model assumptions for single trait and environment.")
              ),
-             box(width = 12,
-                 selectInput(ns("assum_design"), label = h4("Experiment design"), 
-                             choices = list("Completely randomized" = "crd" ,"Randomized complete block" = "block", "Alpha lattice" = "lattice"), 
-                             selected = "block")
-             ),
+             
+             # Input file:
              box(width = 12, solidHeader = TRUE, collapsible = TRUE, status="primary", title = "Input file",
                  p("The input file is a tab delimited table with a column called 'local' defining the environment, 
                    other called 'gen' defining the genotypes and other called 'block' defining the block number. 
@@ -36,13 +33,14 @@ mod_assumptionsTest_ui <- function(id){
                  ),
                  box(width = 8,  
                      #title = "Database",
-                     #Visualização dos dados
+                     #data visualisation
                      tableOutput(ns("dataview"))
                  ),
                  hr(),
                  actionButton(ns("assum1"), "Read the file",icon("refresh")), hr()
              ),
              
+             # Select variables:
              box(width = 12, solidHeader = TRUE, collapsible = TRUE, status="primary", title = "Select variables",
                  box(width = 6,
                      radioButtons(ns("assum4"), label = p("Select the transformation type:"),
@@ -67,6 +65,8 @@ mod_assumptionsTest_ui <- function(id){
                  box(width = 12,
                      p("Expand the windows above to access the results"))
              ),
+             
+             #Plots:
              box(width = 12, solidHeader = TRUE, collapsible = TRUE, collapsed = T, status="info", title = "Plots",
                  
                  box(width = 12, solidHeader = TRUE, collapsible = TRUE, collapsed = T, title = "Residuals vs fitted values",
@@ -90,6 +90,8 @@ mod_assumptionsTest_ui <- function(id){
                      plotOutput(ns("assum5_plot_out")),
                  )
              ),
+             
+             #Anova:
              box(width = 12, solidHeader = TRUE, collapsible = TRUE, collapsed = T, status="info", title = "Anova",
                  DT::dataTableOutput(ns("assum_anova_out"))
              ),
@@ -112,11 +114,11 @@ mod_assumptionsTest_ui <- function(id){
              ),
              box(width = 12, solidHeader = TRUE, collapsible = TRUE, collapsed = T, status="info", title = "Bonferroni-Holm tests for the adjusted p-values",
                  tableOutput(ns("assum_out_out"))
-             ),
-             box(width = 12, solidHeader = TRUE, collapsible = TRUE, collapsed = T, status="info", title = "Variance Inflation Factors",
-                 p("Checking multicollinearity: VIF value higher than 10 indicates multicollinearity."),
-                 tableOutput(ns("assum_vif_out"))
              )
+             # box(width = 12, solidHeader = TRUE, collapsible = TRUE, collapsed = T, status="info", title = "Variance Inflation Factors",
+             #     p("Checking multicollinearity: VIF value higher than 10 indicates multicollinearity."),
+             #     tableOutput(ns("assum_vif_out"))
+             # )
     )
   )
 }
@@ -131,25 +133,22 @@ mod_assumptionsTest_ui <- function(id){
 #' @import multtest
 #' 
 #' @noRd 
-mod_assumptionsTest_server <- function(input, output, session){
+mod_dbc_server <- function(input, output, session){
   ns <- session$ns
-  ## download input
+  # download input
   output$assum_input_exemple <- downloadHandler(
     filename =  function() {
       paste("example_assum.txt")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      if(input$assum_design == "block"){
-        dat <- read.csv(system.file("ext","example_inputs/example_blocks.csv", package = "StatGenESALQ"))
-      } else {
-        dat <- read.csv(system.file("ext","example_inputs/example_lattice.csv", package = "StatGenESALQ"))
-      }
+      # I have to change this example to CRD
+      dat <- read.csv(system.file("ext","example_inputs/example_blocks.csv", package = "StatGenESALQ"))
       write.csv(dat, file = file, row.names = F)
-    } 
+    }
   )
   
-  #Tratamento de dados possibilitando a utilização de .txt e .csv
+  #Data processing using .txt and .csv files.
   observeEvent(input$assum6, {
     observeEvent(input$data_assum, {
       if (is.null(input$data_assum)) {
@@ -163,35 +162,36 @@ mod_assumptionsTest_server <- function(input, output, session){
         })
       }
     })
-  })
+  })   
   
   button_assum1 <- eventReactive(input$assum1, {
     str(input$data_assum)
-    #Aqui esta pegando os exemplos
+    #Here's taking the examples
     if(is.null(input$data_assum)){
-      if(input$assum_design == "block"){
-        dat <- read.csv(system.file("ext","example_inputs/example_blocks.csv", package = "StatGenESALQ"))
-      } else {
-        dat <- read.csv(system.file("ext","example_inputs/example_lattice.csv", package = "StatGenESALQ"))
-      }
+      # I have to change this example 
+      dat <- read.csv(system.file("ext","example_inputs/example_blocks.csv", package = "StatGenESALQ"))
     } else {
-      #Aqui entra o upload
+      #Here's the upload
       dat <- read.csv(input$data_assum$datapath,
                       sep = input$assum6)
     }
     cat(colnames(dat))
     dat
-  })
+  })  
+  
   
   observe({
     #I need change that, it's the problem
+    # '%in%' - is used to check if the values of the first argument are present in the second argument, returning true or false.
+    # Aqui precisamos pensar se deixameremos esse padrão dados de entrada ou deixaremos mais livre porém com possibilidade de dar ruim.
     if(any(colnames(button_assum1()) %in% "rep"))
-      choices_trait_temp <- colnames(button_assum1())[-c(1:4)] else
-        choices_trait_temp <- colnames(button_assum1())[-c(1:3)]
+      choices_trait_temp <- colnames(button_assum1())[-c(1:3)] else
+        choices_trait_temp <- colnames(button_assum1())[-c(1:2)]
       
       choices_trait <- choices_trait_temp
       names(choices_trait) <- choices_trait_temp
       
+      #Opção de colocar um 'if' aqui, a fim de obter duas UI diferentes
       choices_locations_temp <- unique(button_assum1()[,"local"])
       choices_locations <- choices_locations_temp
       names(choices_locations) <- choices_locations_temp
@@ -208,6 +208,7 @@ mod_assumptionsTest_server <- function(input, output, session){
   })
   
   button_assum2 <- eventReactive(input$assum5, {
+    #Precisa melhorar isso - Barra de progresso
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       dat <- button_assum1()
@@ -215,11 +216,13 @@ mod_assumptionsTest_server <- function(input, output, session){
       dat$gen <- as.factor(dat$gen)
       dat$local <- as.factor(dat$local)
       
-      if(input$assum_design == "block"){
-        if(!all(c("local", "block", "gen") %in% colnames(dat)) | ("rep" %in% colnames(dat)))
+      if(is.null(input$data_assum) == F){
+        if(!all(c("local", "block", "gen") %in% colnames(dat)))
           stop(safeError("Randomized complete block design should have columns 'local', 'block' and 'gen'."))
         dat <- dat %>% select(c("local", "gen", "block",input$assum2)) %>%
           filter(local == input$assum3) %>% droplevels()
+        # The droplevels() function is a built-in function in R that is used to remove unused levels from a factor or a categorical variable.
+        
         
         if(input$assum4 == "none"){
           mod <- run_models(df = dat, pheno = dat[,input$assum2] ,design = "DBC", multi_env = F)
@@ -234,26 +237,6 @@ mod_assumptionsTest_server <- function(input, output, session){
         } 
         
         incProgress(0.5, detail = paste("Doing part", 2))
-        
-      } else {
-        if(!all(c("local", "block", "gen", "rep") %in% colnames(dat)))
-          stop(safeError("Alpha lattice design should have columns 'local', 'block', 'rep', and 'gen'."))
-        dat$rep <- as.factor(dat$rep)
-        dat <- dat %>% select(c("local", "gen", "block","rep",input$assum2)) %>%
-          filter(local == input$assum3) %>% droplevels()
-        dat$rep <- as.factor(dat$rep)
-        
-        if(input$assum4 == "none"){
-          mod <- run_models(df = dat, pheno = dat[,input$assum2] ,design = "lattice", multi_env = F)
-        } else if(input$assum4 == "log"){
-          mod <- run_models(df = dat, pheno = log(dat[,input$assum2]) ,design = "lattice", multi_env = F)
-          
-        } else if(input$assum4 == "sqrt(x + 0.5)"){
-          mod <- run_models(df = dat, pheno = sqrt(dat[,input$assum2] + 0.5) ,design = "lattice", multi_env = F)
-          
-        } else if(input$assum4 == "boxcox"){
-          mod <- run_models_boxcox(df = dat, pheno = dat[,input$assum2] ,design = "lattice", multi_env = F)
-        } 
       }
       
       sha <- shapiro.test(mod$residuals)
@@ -278,14 +261,17 @@ mod_assumptionsTest_server <- function(input, output, session){
     autoplot(button_assum2()[[1]], which = 1, data = button_assum2()[[5]],
              colour = "#CC662f", smooth.colour = "#003350") 
   })
+  
   output$assum2_plot_out <- renderPlot({
     autoplot(button_assum2()[[1]], which = 2, data = button_assum2()[[5]],
              colour = "#CC662f", smooth.colour = "#003350") 
   })
+  
   output$assum3_plot_out <- renderPlot({
     autoplot(button_assum2()[[1]], which = 3, data = button_assum2()[[5]],
              colour = "#CC662f", smooth.colour = "#003350") 
   })
+  
   output$assum4_plot_out <- renderPlot({
     plot(button_assum2()[[1]],5)
   })
@@ -296,15 +282,43 @@ mod_assumptionsTest_server <- function(input, output, session){
       labs(title = "Histogram of Residuals",x = "Residuals", y = "Frequency")
   })
   
-  output$assum_anova_out <- DT::renderDataTable(
-    DT::datatable(data.frame(anova(button_assum2()[[1]])),  
+  # output$assum_anova_out <- DT::renderDataTable(
+  #   DT::datatable(data.frame(anova(button_assum2()[[1]])),  
+  #                 extensions = 'Buttons',
+  #                 options = list(
+  #                   dom = 'Bfrtlp',
+  #                   buttons = c('copy', 'csv', 'excel', 'pdf')
+  #                 ),
+  #                 class = "display")
+  # )
+  output$assum_anova_out <- DT::renderDataTable({
+    # Obtenha o conjunto de dados
+    data <- anova(button_assum2()[[1]])
+    
+    # Especifique as colunas que deseja arredondar e o número de casas decimais
+    # columns_to_round <- c("Sum.Sq", "Mean.Sq", "F.value", "Pr..F.", "outra_coluna1", "outra_coluna2")
+    decimal_places1 <- 2  # Especifique o número de casas decimais
+    
+    # Arredonde as colunas selecionadas
+    for (col in 2:4) {
+      data[[col]] <- round(as.numeric(data[[col]]), decimal_places1)
+    }
+    
+    decimal_places1 <- 5
+    for (col in 5) {
+      data[[col]] <- round(as.numeric(data[[col]]), decimal_places1)
+    }
+    
+    # Crie a tabela DataTable
+    DT::datatable(data,
+                  rownames = c("block", "gen","residual"),
                   extensions = 'Buttons',
                   options = list(
                     dom = 'Bfrtlp',
                     buttons = c('copy', 'csv', 'excel', 'pdf')
                   ),
                   class = "display")
-  )
+  })
   
   output$assum_sha_out <- DT::renderDataTable(
     DT::datatable(button_assum2()[[2]],  
@@ -315,6 +329,7 @@ mod_assumptionsTest_server <- function(input, output, session){
                   ),
                   class = "display")
   )
+  
   output$assum_dur_out <- DT::renderDataTable(
     DT::datatable(button_assum2()[[3]],  
                   extensions = 'Buttons',
@@ -339,9 +354,10 @@ mod_assumptionsTest_server <- function(input, output, session){
     as.data.frame(outlier(button_assum2()[[1]]$residuals))
   })
   
-  output$assum_vif_out <- renderTable({
-    as.data.frame(vif(button_assum2()[[1]]))
-  })
+  #Review that - Problem
+  #output$assum_vif_out <- renderTable({
+  # as.data.frame(vif(button_assum2()[[1]]))
+  #})
   
 }
 
@@ -381,7 +397,6 @@ outlier <- function(resid, alpha=0.05){
   }
   return(outliers_BH_df)
 }
-
 
 ##' Utilities
 ##' 
@@ -426,3 +441,4 @@ run_models_boxcox <-function(pheno, df, design, multi_env){
 
 ## To be copied in the server
 # callModule(mod_assumptionsTest_server, "assumptionsTest_ui_1")
+
