@@ -27,6 +27,7 @@ mod_dbc_ui <- function(id){
                  hr(),
                  p("Data View:"),
                  box(width = 4,
+                     # Input Control
                      radioButtons(ns("assum6"), label = p("Select o separator"),
                                   choices = list("Comma" = ",", "Semicolon" = ";", "Tab" = "\t"),
                                   selected = ";")
