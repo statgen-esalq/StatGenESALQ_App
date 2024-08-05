@@ -37,6 +37,8 @@ Because this shiny App is made using [Golem](https://golemverse.org/), it works 
 runGitHub("statgen-esalq/StatGenESALQ_App", ref="main")
 ```
 
+The user can run this app directly by executing the 'app.R' script, which is present on the main page.
+
 **PS:** [Why "main" and not "master"](https://www.zdnet.com/article/github-to-replace-master-with-main-starting-next-month/#:~:text=GitHub%20repositories%20are%20where%20users,of%20a%20source%20code%20repository.&text=1%2C%202020%2C%20any%20new%20repositories,master%2C%22%20the%20company%20said.).
 
 It will require that the dependencies packages are already installed.
