@@ -19,11 +19,7 @@ Features implemented by now:
 
 ## Quick start
 
-There are four ways of using this app:
-
-* (Exclusive for courses) Access: [https://statgen.esalq.usp.br/epagriApp/](https://statgen.esalq.usp.br/epagriApp/)
-
-We use this App for didactic purposes. In our server version, we store real data as examples for our courses. If you are participating of some of or courses, please send us an e-mail requesting your login and password (chtaniguti in usp.br).
+There are three ways of using this app:
 
 * (Public access) Install the package locally and run the app:
 
