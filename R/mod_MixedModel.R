@@ -110,8 +110,8 @@ mod_MixedModel_ui <- function(id){
                  verbatimTextOutput(ns("sommer_tutorial")), 
                  hr(),
                  p("When you call the variables in your model, use the same column names present in your data."),
-                 textInput(ns("fixed"), label = p("Fixed:"), value = "Peso ~ Corte + Corte:Bloco"),
-                 textInput(ns("random"), label = p("Random:"), value = "~ Genotipo + Corte:Genotipo"),
+                 textInput(ns("fixed"), label = p("Fixed:"), value = "Weight ~ Harvest + Harvest:Block"),
+                 textInput(ns("random"), label = p("Random:"), value = "~ Genotype + Harvest:Genotype"),
                  textInput(ns("rcov"), label = p("rcov:"), value = "~ units"), hr(),
                  
                  actionButton(ns("analysis_run"), "Run analysis",icon("refresh")), 
@@ -273,23 +273,28 @@ mod_MixedModel_server <- function(input, output, session){
   
   # Data Filtering
   button2 <- eventReactive(input$filter_ready, {
-    dat <- button1()
-    if (length(input$factor) > 0) {
-      n <- length(input$factor)
-      for (i in 1:n) {
-        dat[[input$factor[i]]] <- as.factor(dat[[input$factor[i]]])
+    if(input$filter_choice == "Yes") {
+      dat <- button1()
+      if (length(input$factor) > 0) {
+        n <- length(input$factor)
+        for (i in 1:n) {
+          dat[[input$factor[i]]] <- as.factor(dat[[input$factor[i]]])
+        }
       }
+      
+      num <- length(input$factor)
+      col_names <- input$factor
+      
+      for (i in 1:num) {
+        dat <- dat %>%
+          filter(dat[[input$factor[i]]] %in% c(input[[paste0("filter", i)]])) %>%
+          droplevels()
+      }
+      dat
+    } else {
+      dat <- button1()
+      dat
     }
-    
-    num <- length(input$factor)
-    col_names <- input$factor
-    
-    for (i in 1:num) {
-      dat <- dat %>%
-        filter(dat[[input$factor[i]]] %in% c(input[[paste0("filter", i)]])) %>%
-        droplevels()
-    }
-    dat
   })
   
   # Update choices for analysis
@@ -311,7 +316,7 @@ mod_MixedModel_server <- function(input, output, session){
   })
   
   observeEvent(input$parameter_choice, {
-    showNotification("Parameters chose")
+    showNotification("Parameters chosen")
   })
   
   # Analysis function
