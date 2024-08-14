@@ -154,7 +154,8 @@ run_models <-function(pheno, df, design, multi_env){
     if(multi_env){
       mod <- lm(pheno ~ df$gen + df$local/df$block + df$local + df$gen*df$local)
     } else {
-      mod <- lm(pheno ~ df$gen + df$block)
+      # mod <- lm(pheno ~ df$gen + df$block)
+      mod <- lm(pheno ~ df$block + df$gen)
     }
   } else if(design == "lattice"){
     if(multi_env){

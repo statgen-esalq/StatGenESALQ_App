@@ -14,11 +14,7 @@ Features implemented by now:
 
 ## Quick start
 
-There are four ways of using this app:
-
-* (Exclusive for courses) Access: [https://statgen.esalq.usp.br/epagriApp/](https://statgen.esalq.usp.br/epagriApp/)
-
-We use this App for didactic purposes. In our server version, we store real data as examples for our courses. If you are participating of some of or courses, please send us an e-mail requesting your login and password (chtaniguti in usp.br).
+There are three ways of using this app:
 
 * (Public access) Install the package locally and run the app:
 
@@ -35,6 +31,8 @@ Because this shiny App is made using [Golem](https://golemverse.org/), it works 
 ```{r, eval=FALSE}
 runGitHub("statgen-esalq/StatGenESALQ_App", ref="main")
 ```
+
+The user can run this app directly by executing the 'app.R' script, which is present on the main page.
 
 **PS:** [Why "main" and not "master"](https://www.zdnet.com/article/github-to-replace-master-with-main-starting-next-month/#:~:text=GitHub%20repositories%20are%20where%20users,of%20a%20source%20code%20repository.&text=1%2C%202020%2C%20any%20new%20repositories,master%2C%22%20the%20company%20said.).
 

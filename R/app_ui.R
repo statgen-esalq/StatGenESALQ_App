@@ -20,20 +20,20 @@ app_ui <- function(request) {
           menuItem("Single environment", tabName = "single", 
                    menuSubItem("Assumptions test", tabName = "assumptionsTest", icon = icon("minus")),
                    menuSubItem("Selection indices", tabName = "indices", icon = icon("minus"))
-                   # ,
-                   # menuSubItem("DIC", tabName = "dic", icon = icon("minus"))
           ),
           menuItem("Multi environment", tabName = "multi", 
                    #menuSubItem("Assumptions test", tabName = "METassumptionsTest", icon = icon("crosshairs")),
                    menuSubItem("Selection indices", tabName = "METindices", icon = icon("minus")),
-                   menuSubItem("Stability analysis", tabName = "MET_metan", icon = icon("minus")),
-                   menuSubItem("Mixed models", tabName = "mixedModel", icon = icon("minus"))
+                   menuSubItem("Stability analysis", tabName = "MET_metan", icon = icon("minus"))
           ),
           # New menuItem 
-          menuItem("Statistical analysis", tabName = "Stat", 
+          menuItem("Fixed Models", tabName = "fixed", 
                    menuSubItem("Completely randomized design", tabName = "DIC", icon = icon("minus")),
                    menuSubItem("Randomized block design", tabName = "DBC", icon = icon("minus")),
                    menuSubItem("Split plot design", tabName = "parc_sub", icon = icon("minus"))
+          ),
+          menuItem("Mixed Models", tabName = "mixedModel"
+                   # , icon = icon("minus")
           ),
           tags$li(class = "dropdown",
                   tags$a(href="https://statgen-esalq.github.io/", target="_blank", 
@@ -129,10 +129,6 @@ app_ui <- function(request) {
           tabItem(tabName = "indices",
                   mod_indices_ui("indices_ui_1")
           ),
-          # Ver sobre isso!!!
-          # tabItem(tabName = "dic",
-          #         mod_dic_ui("dic_ui_1") #Pelo amor de Deus, da onde saiu isso!!!
-          # ),
           # tabItem(tabName = "METassumptionsTest",
           #         mod_METassumptionsTest_ui("METassumptionsTest_ui_1")
           # ),

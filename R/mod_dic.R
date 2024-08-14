@@ -214,7 +214,7 @@ mod_dic_server <- function(input, output, session){
       if(is.null(input$data_assum) == F){
         if(!all(c("local", "gen") %in% colnames(dat)))
           stop(safeError("Completely randomized design should have columns 'local' and 'gen'."))
-        dat <- dat %>% select(c("local", "gen", "block",input$assum2)) %>%
+        dat <- dat %>% select(c("local", "gen", input$assum2)) %>%
           filter(local == input$assum3) %>% droplevels()
         # The droplevels() function is a built-in function in R that is used to remove unused levels from a factor or a categorical variable.
         
@@ -274,15 +274,44 @@ mod_dic_server <- function(input, output, session){
       labs(title = "Histogram of Residuals",x = "Residuals", y = "Frequency")
   })
   
-  output$assum_anova_out <- DT::renderDataTable(
-    DT::datatable(data.frame(anova(button_assum2()[[1]])),  
+  # output$assum_anova_out <- DT::renderDataTable(
+  #   DT::datatable(data.frame(anova(button_assum2()[[1]])),  
+  #                 extensions = 'Buttons',
+  #                 options = list(
+  #                   dom = 'Bfrtlp',
+  #                   buttons = c('copy', 'csv', 'excel', 'pdf')
+  #                 ),
+  #                 class = "display")
+  # )
+  
+  output$assum_anova_out <- DT::renderDataTable({
+    # Obtenha o conjunto de dados
+    data <- anova(button_assum2()[[1]])
+    
+    # Especifique as colunas que deseja arredondar e o número de casas decimais
+    # columns_to_round <- c("Sum.Sq", "Mean.Sq", "F.value", "Pr..F.", "outra_coluna1", "outra_coluna2")
+    decimal_places1 <- 2  # Especifique o número de casas decimais
+    
+    # Arredonde as colunas selecionadas
+    for (col in 2:4) {
+      data[[col]] <- round(as.numeric(data[[col]]), decimal_places1)
+    }
+    
+    decimal_places1 <- 5
+    for (col in 5) {
+      data[[col]] <- round(as.numeric(data[[col]]), decimal_places1)
+    }
+    
+    # Crie a tabela DataTable
+    DT::datatable(data,
+                  rownames = c("gen","residual"),
                   extensions = 'Buttons',
                   options = list(
                     dom = 'Bfrtlp',
                     buttons = c('copy', 'csv', 'excel', 'pdf')
                   ),
                   class = "display")
-  )
+  })
   
   output$assum_sha_out <- DT::renderDataTable(
     DT::datatable(button_assum2()[[2]],  
