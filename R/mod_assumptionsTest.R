@@ -166,7 +166,6 @@ mod_assumptionsTest_server <- function(input, output, session){
   })
   
   button_assum1 <- eventReactive(input$assum1, {
-    str(input$data_assum)
     #Aqui esta pegando os exemplos
     if(is.null(input$data_assum)){
       if(input$assum_design == "block"){
@@ -179,7 +178,6 @@ mod_assumptionsTest_server <- function(input, output, session){
       dat <- read.csv(input$data_assum$datapath,
                       sep = input$assum6)
     }
-    cat(colnames(dat))
     dat
   })
   
@@ -235,7 +233,7 @@ mod_assumptionsTest_server <- function(input, output, session){
         
         incProgress(0.5, detail = paste("Doing part", 2))
         
-      } else {
+      } else if(input$assum_design == "lattice"){
         if(!all(c("local", "block", "gen", "rep") %in% colnames(dat)))
           stop(safeError("Alpha lattice design should have columns 'local', 'block', 'rep', and 'gen'."))
         dat$rep <- as.factor(dat$rep)
@@ -254,11 +252,33 @@ mod_assumptionsTest_server <- function(input, output, session){
         } else if(input$assum4 == "boxcox"){
           mod <- run_models_boxcox(df = dat, pheno = dat[,input$assum2] ,design = "lattice", multi_env = F)
         } 
+      } else if(input$assum_design == "crd"){
+        if(!all(c("local") %in% colnames(dat)))
+          stop(safeError("Complete randomized design should have columns 'local' and 'gen'."))
+        dat <- dat %>% select(c("local", "gen",input$assum2)) %>%
+          filter(local == input$assum3) %>% droplevels()
+        
+        if(input$assum4 == "none"){
+          mod <- run_models(df = dat, pheno = dat[,input$assum2] ,design = "CRD", multi_env = F)
+        } else if(input$assum4 == "log"){
+          mod <- run_models(df = dat, pheno = log(dat[,input$assum2]) ,design = "CRD", multi_env = F)
+          
+        } else if(input$assum4 == "sqrt(x + 0.5)"){
+          mod <- run_models(df = dat, pheno = sqrt(dat[,input$assum2] + 0.5) ,design = "CRD", multi_env = F)
+          
+        } else if(input$assum4 == "boxcox"){
+          mod <- run_models_boxcox(df = dat, pheno = dat[,input$assum2] ,design = "CRD", multi_env = F)
+        } 
+        
+        incProgress(0.5, detail = paste("Doing part", 2))
       }
       
-      sha <- shapiro.test(mod$residuals)
-      df <- data.frame(W = sha$statistic,
-                       `p-value` = sha$p.value)
+      if(!all(mod$residuals == 0)) {
+        sha <- shapiro.test(mod$residuals) 
+        df <- data.frame(W = sha$statistic,
+                         `p-value` = sha$p.value)
+      } else df <- NULL
+      
       dur <-durbinWatsonTest(mod)
       dur_df <- data.frame(r = dur$r,
                            dw = dur$dw,
@@ -306,7 +326,12 @@ mod_assumptionsTest_server <- function(input, output, session){
                   class = "display")
   )
   
-  output$assum_sha_out <- DT::renderDataTable(
+  output$assum_sha_out <- DT::renderDataTable({
+    
+    validate(
+      need(!is.null(button_assum2()[[2]]), "All residual values are 0")
+    )
+    
     DT::datatable(button_assum2()[[2]],  
                   extensions = 'Buttons',
                   options = list(
@@ -314,7 +339,7 @@ mod_assumptionsTest_server <- function(input, output, session){
                     buttons = c('copy', 'csv', 'excel', 'pdf')
                   ),
                   class = "display")
-  )
+  })
   output$assum_dur_out <- DT::renderDataTable(
     DT::datatable(button_assum2()[[3]],  
                   extensions = 'Buttons',
